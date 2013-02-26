@@ -23,11 +23,8 @@ def paged_search(client, query):
         print("Fetch page {0}".format(page))
         resp = client.search(query=query, page=page)
         for item in resp["results"]:
-            if item["result_type"] != "ticket":
-                continue
-            if isinstance(item["description"], unicode):
-                item["description"] = item["description"].encode("ascii", "ignore")
-            yield item
+            if item["result_type"] == "ticket":
+                yield item
         if resp.get("next_page") is not None:
             page += 1
         else:
@@ -55,8 +52,12 @@ if __name__ == '__main__':
             values = [item[field] for field in fields]
 
             ticket = get_ticket(client_v1, item["id"])
-            values.append(
-                ticket["comments"][0]["value"].encode('ascii', 'ignore')
-            )
+            values.append(ticket["comments"][0]["value"])
 
-            writer.writerow(values)
+            ascii_values = []
+            for value in values:
+              if isinstance(value, unicode):
+                value = value.encode('ascii', 'ignore')
+              ascii_values.append(value)
+
+            writer.writerow(ascii_values)
